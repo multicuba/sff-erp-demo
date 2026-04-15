@@ -902,15 +902,118 @@ function ContactsView() {
   );
 }
 
+/* ─── PROFILE VIEW ─── */
+function ProfileView() {
+  const user = {
+    name: "Carlos Martínez",
+    role: "Gerente de Operaciones",
+    email: "carlos.martinez@southfloridafoods.com",
+    phone: "(305) 555-0150",
+    location: "5900 NW 97 Ave, Doral, FL 33178",
+    department: "Operaciones y Logística",
+    startDate: "Marzo 2021",
+    reportsTo: "Director General",
+  };
+
+  const permissions = [
+    { module: "Inventario", level: "Lectura / Escritura", icon: "📦" },
+    { module: "Compras", level: "Lectura / Escritura / Aprobación", icon: "🛒" },
+    { module: "Ventas", level: "Lectura / Escritura", icon: "💰" },
+    { module: "Facturación", level: "Lectura / Escritura", icon: "🧾" },
+    { module: "Devoluciones", level: "Lectura / Escritura", icon: "🔄" },
+    { module: "Contactos", level: "Lectura / Escritura", icon: "👥" },
+    { module: "Reportes", level: "Lectura", icon: "📊" },
+    { module: "Configuración", level: "Sin acceso", icon: "⚙️" },
+  ];
+
+  const activity = [
+    { date: "2025-08-08 14:32", action: "Confirmó PO-2025-041", module: "Compras" },
+    { date: "2025-08-08 11:15", action: "Registró pago parcial INV-2025-088", module: "Facturación" },
+    { date: "2025-08-07 16:45", action: "Aprobó devolución DEV-2025-008", module: "Devoluciones" },
+    { date: "2025-08-07 10:20", action: "Creó cotización SO-2025-112", module: "Ventas" },
+    { date: "2025-08-06 09:00", action: "Ajuste de inventario — Frijoles Negros", module: "Inventario" },
+    { date: "2025-08-05 15:30", action: "Exportó 5 facturas a QuickBooks", module: "Facturación" },
+  ];
+
+  return (
+    <div>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 20, fontFamily: "'DM Sans', sans-serif" }}>Mi Perfil</h1>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+        {/* User Info */}
+        <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}` }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 24, fontWeight: 700 }}>CM</div>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.textPrimary }}>{user.name}</div>
+              <div style={{ fontSize: 13, color: COLORS.textSecondary }}>{user.role}</div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Activo desde {user.startDate}</div>
+            </div>
+          </div>
+          <FieldGroup label="Email" value={user.email} />
+          <FieldGroup label="Teléfono" value={user.phone} />
+          <FieldGroup label="Ubicación" value={user.location} />
+          <FieldGroup label="Departamento" value={user.department} />
+          <FieldGroup label="Reporta a" value={user.reportsTo} />
+        </div>
+
+        {/* Permissions */}
+        <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase", letterSpacing: 0.5 }}>Permisos por Módulo</h3>
+          {permissions.map((p, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < permissions.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{p.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>{p.module}</span>
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20,
+                background: p.level === "Sin acceso" ? "#FEE2E2" : p.level.includes("Aprobación") ? "#D1FAE5" : "#DBEAFE",
+                color: p.level === "Sin acceso" ? "#DC2626" : p.level.includes("Aprobación") ? "#059669" : "#1D4ED8",
+              }}>{p.level}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Activity Log */}
+      <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase", letterSpacing: 0.5 }}>Actividad Reciente</h3>
+        <DataTable
+          columns={[
+            { key: "date", label: "Fecha / Hora" },
+            { key: "action", label: "Acción", render: (v) => <span style={{ fontWeight: 600 }}>{v}</span> },
+            { key: "module", label: "Módulo", render: (v) => <StatusBadge status={v === "Compras" ? "confirmed" : v === "Facturación" ? "invoiced" : v === "Ventas" ? "shipped" : v === "Devoluciones" ? "draft" : "received"} /> },
+          ]}
+          data={activity}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ─── MAIN APP ─── */
 export default function App() {
   const [activeModule, setActiveModule] = useState("dashboard");
+  const [resetKey, setResetKey] = useState(0);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
   const [targetRect, setTargetRect] = useState(null);
   const sidebarRef = useRef(null);
 
   const currentStep = showTutorial ? TUTORIAL_STEPS[tutorialStep] : null;
+
+  const handleNavigation = useCallback((moduleId) => {
+    setActiveModule(moduleId);
+    setResetKey(k => k + 1);
+  }, []);
+
+  const handleStartTutorial = useCallback(() => {
+    setTutorialStep(0);
+    setShowTutorial(true);
+    setActiveModule("dashboard");
+    setResetKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     if (!showTutorial || !currentStep) return;
@@ -948,14 +1051,15 @@ export default function App() {
 
   const renderModule = () => {
     switch (activeModule) {
-      case "dashboard": return <DashboardView onNavigate={setActiveModule} />;
-      case "inventory": return <InventoryView />;
-      case "purchases": return <PurchasesView />;
-      case "sales": return <SalesView />;
-      case "invoicing": return <InvoicingView />;
-      case "returns": return <ReturnsView />;
-      case "contacts": return <ContactsView />;
-      default: return <DashboardView onNavigate={setActiveModule} />;
+      case "dashboard": return <DashboardView key={resetKey} onNavigate={handleNavigation} />;
+      case "inventory": return <InventoryView key={resetKey} />;
+      case "purchases": return <PurchasesView key={resetKey} />;
+      case "sales": return <SalesView key={resetKey} />;
+      case "invoicing": return <InvoicingView key={resetKey} />;
+      case "returns": return <ReturnsView key={resetKey} />;
+      case "contacts": return <ContactsView key={resetKey} />;
+      case "profile": return <ProfileView key={resetKey} />;
+      default: return <DashboardView key={resetKey} onNavigate={handleNavigation} />;
     }
   };
 
@@ -993,7 +1097,7 @@ export default function App() {
           {MODULES.map((m) => (
             <button
               key={m.id}
-              onClick={() => !showTutorial && setActiveModule(m.id)}
+              onClick={() => !showTutorial && handleNavigation(m.id)}
               style={{
                 display: "flex", alignItems: "center", gap: 10, width: "100%",
                 padding: "10px 12px", borderRadius: 8, border: "none", cursor: showTutorial ? "default" : "pointer",
@@ -1011,10 +1115,15 @@ export default function App() {
           ))}
         </div>
 
-        {/* User area */}
-        <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* User area - clickable */}
+        <div
+          onClick={() => !showTutorial && handleNavigation("profile")}
+          style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", cursor: showTutorial ? "default" : "pointer", transition: "background 0.15s", borderRadius: 0 }}
+          onMouseEnter={(e) => { if (!showTutorial) e.currentTarget.style.background = COLORS.sidebarHover; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #2980B9, #1B5E7B)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700 }}>CM</div>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, #2980B9, ${COLORS.primary})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700, border: activeModule === "profile" ? "2px solid #fff" : "2px solid transparent", transition: "border 0.15s" }}>CM</div>
             <div>
               <div style={{ color: "#fff", fontSize: 12, fontWeight: 600 }}>Carlos Martínez</div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Gerente de Operaciones</div>
@@ -1030,7 +1139,26 @@ export default function App() {
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, overflow: "auto", padding: "24px 32px" }}>
+      <div style={{ flex: 1, overflow: "auto", padding: "24px 32px", position: "relative" }}>
+        {/* Tutorial restart button */}
+        {!showTutorial && (
+          <button
+            onClick={handleStartTutorial}
+            style={{
+              position: "fixed", top: 16, right: 24, zIndex: 100,
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 14px", borderRadius: 8,
+              background: "#fff", border: `1px solid ${COLORS.border}`,
+              color: COLORS.textSecondary, fontSize: 12, fontWeight: 600,
+              cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.primary; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = COLORS.primary; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = COLORS.textSecondary; e.currentTarget.style.borderColor = COLORS.border; }}
+          >
+            <span style={{ fontSize: 14 }}>🎓</span> Tutorial
+          </button>
+        )}
         {renderModule()}
       </div>
 
