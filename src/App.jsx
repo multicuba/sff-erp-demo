@@ -220,14 +220,20 @@ function FieldGroup({ label, value }) {
 
 /* ─── TUTORIAL OVERLAY ─── */
 function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === "Escape") onSkip(); };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [onSkip]);
+
   if (!step) return null;
 
   const isCenter = step.position === "center" || !targetRect;
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000 }}>
-      {/* dark overlay with cutout */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.72)", transition: "all 0.4s ease" }} />
+      {/* dark overlay - click to close */}
+      <div onClick={onSkip} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.72)", transition: "all 0.4s ease", cursor: "pointer" }} />
 
       {/* highlight cutout */}
       {targetRect && !isCenter && (
@@ -267,6 +273,18 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
         boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
         animation: "fadeUp 0.35s ease-out",
       }}>
+        {/* X close button */}
+        <button onClick={onSkip} style={{
+          position: "absolute", top: 12, right: 12, width: 28, height: 28,
+          borderRadius: "50%", border: "none", background: "transparent",
+          color: COLORS.textMuted, fontSize: 18, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "background 0.15s, color 0.15s",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.border; e.currentTarget.style.color = COLORS.textPrimary; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.textMuted; }}
+        >✕</button>
+
         {/* Minari badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ width: 28, height: 28, borderRadius: 6, background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 800 }}>M</div>
