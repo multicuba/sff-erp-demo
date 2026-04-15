@@ -20,6 +20,16 @@ const COLORS = {
   sidebarActive: "#1B5E7B",
 };
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 const MODULES = [
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "inventory", label: "Inventario", icon: "📦" },
@@ -149,8 +159,9 @@ function StatusBadge({ status }) {
 }
 
 function KpiCard({ icon, label, value, sub, color, id }) {
+  const isMobile = useIsMobile();
   return (
-    <div id={id} style={{ background: "#fff", borderRadius: 12, padding: "20px 24px", border: `1px solid ${COLORS.border}`, flex: "1 1 220px", minWidth: 200, position: "relative", overflow: "hidden" }}>
+    <div id={id} style={{ background: "#fff", borderRadius: 12, padding: isMobile ? "16px 18px" : "20px 24px", border: `1px solid ${COLORS.border}`, flex: isMobile ? "1 1 100%" : "1 1 220px", minWidth: isMobile ? 0 : 200, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: color }} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
         <span style={{ fontSize: 28 }}>{icon}</span>
@@ -222,6 +233,7 @@ function FieldGroup({ label, value }) {
 function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
   const tooltipRef = useRef(null);
   const [pos, setPos] = useState({ top: "50%", left: "50%", transform: "translate(-50%, -50%)" });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === "Escape") onSkip(); };
@@ -232,7 +244,7 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
   // Smart viewport-aware positioning
   useEffect(() => {
     if (!step) return;
-    const isCenter = step.position === "center" || !targetRect;
+    const isCenter = step.position === "center" || !targetRect || isMobile;
     if (isCenter) {
       setPos({ top: "50%", left: "50%", transform: "translate(-50%, -50%)" });
       return;
@@ -293,7 +305,7 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
 
   if (!step) return null;
 
-  const isCenter = step.position === "center" || !targetRect;
+  const isCenter = step.position === "center" || !targetRect || isMobile;
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000 }}>
@@ -325,9 +337,9 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
         transform: pos.transform || "none",
         background: "#fff",
         borderRadius: 16,
-        padding: "28px 32px",
-        maxWidth: 420,
-        minWidth: 320,
+        padding: isMobile ? "20px 20px" : "28px 32px",
+        maxWidth: isMobile ? "calc(100vw - 32px)" : 420,
+        minWidth: isMobile ? 280 : 320,
         zIndex: 10002,
         boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
         animation: "fadeUp 0.35s ease-out",
@@ -385,6 +397,7 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
 /* ─── MODULE VIEWS ─── */
 
 function DashboardView({ onNavigate }) {
+  const isMobile = useIsMobile();
   const lowStockProducts = PRODUCTS.filter(p => p.lowStock || p.stock < p.min);
   return (
     <div>
@@ -400,7 +413,7 @@ function DashboardView({ onNavigate }) {
         <KpiCard icon="📋" label="Cuentas por Cobrar" value="$16,350" sub="4 facturas abiertas" color={COLORS.danger} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
         {/* Recent Sales */}
         <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -455,6 +468,7 @@ function DashboardView({ onNavigate }) {
 
 function InventoryView() {
   const [selected, setSelected] = useState(null);
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState("all");
 
   const filtered = filter === "low" ? PRODUCTS.filter(p => p.stock < p.min) : filter === "all" ? PRODUCTS : PRODUCTS.filter(p => p.category === filter);
@@ -466,7 +480,7 @@ function InventoryView() {
     const stockColor = p.stock < p.min ? COLORS.danger : p.stock < p.min * 1.5 ? COLORS.warning : COLORS.success;
     return (
       <DetailPanel title={p.name} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase", letterSpacing: 0.5 }}>Información del Producto</h4>
             <FieldGroup label="SKU" value={p.sku} />
@@ -518,7 +532,7 @@ function InventoryView() {
 
   return (
     <div id="module-inventory">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Inventario</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>{PRODUCTS.length} productos · Bodega Doral 5900 NW 97 Ave</p>
@@ -551,12 +565,13 @@ function InventoryView() {
 
 function PurchasesView() {
   const [selected, setSelected] = useState(null);
+  const isMobile = useIsMobile();
 
   if (selected) {
     const o = selected;
     return (
       <DetailPanel title={`Orden de Compra ${o.id}`} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24, marginBottom: 20 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase" }}>Datos de la Orden</h4>
             <FieldGroup label="Proveedor" value={o.supplier} />
@@ -597,7 +612,7 @@ function PurchasesView() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Compras</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>Órdenes de compra a proveedores</p>
@@ -622,13 +637,14 @@ function PurchasesView() {
 }
 
 function SalesView() {
+  const isMobile = useIsMobile();
   const [selected, setSelected] = useState(null);
 
   if (selected) {
     const o = selected;
     return (
       <DetailPanel title={`Pedido ${o.id}`} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24, marginBottom: 20 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase" }}>Datos del Pedido</h4>
             <FieldGroup label="Cliente" value={o.customer} />
@@ -670,7 +686,7 @@ function SalesView() {
 
   return (
     <div id="module-sales">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Ventas</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>Pedidos y cotizaciones</p>
@@ -698,6 +714,7 @@ function SalesView() {
 }
 
 function InvoicingView() {
+  const isMobile = useIsMobile();
   const [selected, setSelected] = useState(null);
 
   if (selected) {
@@ -705,7 +722,7 @@ function InvoicingView() {
     const paidPct = Math.round((inv.paid / inv.total) * 100);
     return (
       <DetailPanel title={`Factura ${inv.id}`} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24, marginBottom: 20 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase" }}>Datos de Factura</h4>
             <FieldGroup label="Cliente" value={inv.customer} />
@@ -743,7 +760,7 @@ function InvoicingView() {
 
   return (
     <div id="module-invoicing">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Facturación</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>Facturas, pagos y sincronización con QuickBooks</p>
@@ -773,6 +790,7 @@ function InvoicingView() {
 }
 
 function ReturnsView() {
+  const isMobile = useIsMobile();
   const [selected, setSelected] = useState(null);
   const returns = [
     { id: "DEV-2025-008", customer: "Sedano's Supermarkets", date: "2025-08-07", reason: "Producto dañado", product: "Queso Blanco Llanero", qty: "15 unit", status: "confirmed", action: "Devolución a proveedor" },
@@ -783,7 +801,7 @@ function ReturnsView() {
   if (selected) {
     return (
       <DetailPanel title={`Devolución ${selected.id}`} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase" }}>Datos de la Devolución</h4>
             <FieldGroup label="Cliente" value={selected.customer} />
@@ -808,7 +826,7 @@ function ReturnsView() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Devoluciones</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>Gestión de devoluciones de clientes</p>
@@ -833,6 +851,7 @@ function ReturnsView() {
 }
 
 function ContactsView() {
+  const isMobile = useIsMobile();
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all");
   const filtered = filter === "all" ? CONTACTS : CONTACTS.filter(c => c.type === filter);
@@ -840,7 +859,7 @@ function ContactsView() {
   if (selected) {
     return (
       <DetailPanel title={selected.name} onBack={() => setSelected(null)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 20 }}>
             <h4 style={{ fontSize: 14, fontWeight: 700, color: COLORS.textSecondary, marginBottom: 16, textTransform: "uppercase" }}>Información de Contacto</h4>
             <FieldGroup label="Tipo" value={<StatusBadge status={selected.type} />} />
@@ -872,7 +891,7 @@ function ContactsView() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, fontFamily: "'DM Sans', sans-serif" }}>Contactos</h1>
           <p style={{ color: COLORS.textSecondary, fontSize: 13 }}>Clientes y proveedores</p>
@@ -904,6 +923,7 @@ function ContactsView() {
 
 /* ─── PROFILE VIEW ─── */
 function ProfileView() {
+  const isMobile = useIsMobile();
   const user = {
     name: "Carlos Martínez",
     role: "Gerente de Operaciones",
@@ -939,7 +959,7 @@ function ProfileView() {
     <div>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 20, fontFamily: "'DM Sans', sans-serif" }}>Mi Perfil</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, marginBottom: 20 }}>
         {/* User Info */}
         <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${COLORS.border}`, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}` }}>
@@ -999,13 +1019,16 @@ export default function App() {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
   const [targetRect, setTargetRect] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const currentStep = showTutorial ? TUTORIAL_STEPS[tutorialStep] : null;
 
   const handleNavigation = useCallback((moduleId) => {
     setActiveModule(moduleId);
     setResetKey(k => k + 1);
+    setSidebarOpen(false);
   }, []);
 
   const handleStartTutorial = useCallback(() => {
@@ -1013,6 +1036,7 @@ export default function App() {
     setShowTutorial(true);
     setActiveModule("dashboard");
     setResetKey(k => k + 1);
+    setSidebarOpen(false);
   }, []);
 
   useEffect(() => {
@@ -1070,16 +1094,26 @@ export default function App() {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
       `}</style>
 
+      {/* Mobile sidebar backdrop */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 998 }} />
+      )}
+
       {/* Sidebar */}
       <div ref={sidebarRef} id="sidebar" style={{
         width: 240, background: COLORS.sidebar, display: "flex", flexDirection: "column", flexShrink: 0,
-        boxShadow: "2px 0 20px rgba(0,0,0,0.15)", zIndex: showTutorial && currentStep?.target === "sidebar" ? 10003 : 1,
-        position: "relative"
+        boxShadow: "2px 0 20px rgba(0,0,0,0.15)",
+        zIndex: showTutorial && currentStep?.target === "sidebar" ? 10003 : 999,
+        position: isMobile ? "fixed" : "relative",
+        top: 0, left: 0, bottom: 0,
+        transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
+        transition: "transform 0.25s ease",
       }}>
         {/* Logo area */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1093,7 +1127,7 @@ export default function App() {
         </div>
 
         {/* Nav items */}
-        <div style={{ padding: "12px 10px", flex: 1 }}>
+        <div style={{ padding: "12px 10px", flex: 1, overflowY: "auto" }}>
           {MODULES.map((m) => (
             <button
               key={m.id}
@@ -1139,9 +1173,29 @@ export default function App() {
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, overflow: "auto", padding: "24px 32px", position: "relative" }}>
-        {/* Tutorial restart button */}
-        {!showTutorial && (
+      <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "16px" : "24px 32px", position: "relative" }}>
+        {/* Top bar for mobile */}
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${COLORS.border}` }}>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 18, lineHeight: 1, color: COLORS.textPrimary }}
+            >☰</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 6, background: "linear-gradient(135deg, #E67E22, #F39C12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 800 }}>S</div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>South Florida Foods</span>
+            </div>
+            {!showTutorial ? (
+              <button
+                onClick={handleStartTutorial}
+                style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 14, lineHeight: 1, color: COLORS.textSecondary }}
+              >🎓</button>
+            ) : <div style={{ width: 38 }} />}
+          </div>
+        )}
+
+        {/* Tutorial restart button (desktop only) */}
+        {!showTutorial && !isMobile && (
           <button
             onClick={handleStartTutorial}
             style={{
