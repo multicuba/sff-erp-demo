@@ -220,11 +220,76 @@ function FieldGroup({ label, value }) {
 
 /* ─── TUTORIAL OVERLAY ─── */
 function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
+  const tooltipRef = useRef(null);
+  const [pos, setPos] = useState({ top: "50%", left: "50%", transform: "translate(-50%, -50%)" });
+
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === "Escape") onSkip(); };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onSkip]);
+
+  // Smart viewport-aware positioning
+  useEffect(() => {
+    if (!step) return;
+    const isCenter = step.position === "center" || !targetRect;
+    if (isCenter) {
+      setPos({ top: "50%", left: "50%", transform: "translate(-50%, -50%)" });
+      return;
+    }
+
+    // Wait for tooltip to render so we can measure it
+    requestAnimationFrame(() => {
+      const tt = tooltipRef.current;
+      if (!tt || !targetRect) return;
+
+      const ttW = tt.offsetWidth || 400;
+      const ttH = tt.offsetHeight || 300;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const pad = 20; // gap between target and tooltip
+      const margin = 16; // min distance from viewport edge
+
+      const tr = targetRect; // alias
+
+      // Calculate available space in each direction
+      const spaceRight = vw - tr.right - pad - margin;
+      const spaceLeft = tr.left - pad - margin;
+      const spaceBottom = vh - tr.bottom - pad - margin;
+      const spaceTop = tr.top - pad - margin;
+
+      let top, left;
+
+      // Try preferred positions in order: bottom, right, left, top
+      if (spaceBottom >= ttH) {
+        // Below the target
+        top = tr.bottom + pad;
+        left = Math.max(margin, Math.min(tr.left, vw - ttW - margin));
+      } else if (spaceRight >= ttW) {
+        // Right of the target
+        top = Math.max(margin, Math.min(tr.top, vh - ttH - margin));
+        left = tr.right + pad;
+      } else if (spaceLeft >= ttW) {
+        // Left of the target
+        top = Math.max(margin, Math.min(tr.top, vh - ttH - margin));
+        left = tr.left - pad - ttW;
+      } else if (spaceTop >= ttH) {
+        // Above the target
+        top = tr.top - pad - ttH;
+        left = Math.max(margin, Math.min(tr.left, vw - ttW - margin));
+      } else {
+        // Fallback: center on screen
+        top = Math.max(margin, (vh - ttH) / 2);
+        left = Math.max(margin, (vw - ttW) / 2);
+      }
+
+      // Final clamp to viewport
+      top = Math.max(margin, Math.min(top, vh - ttH - margin));
+      left = Math.max(margin, Math.min(left, vw - ttW - margin));
+
+      setPos({ top, left, transform: "none" });
+    });
+  }, [step, targetRect, current]);
 
   if (!step) return null;
 
@@ -253,17 +318,11 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
       )}
 
       {/* tooltip card */}
-      <div style={{
+      <div ref={tooltipRef} style={{
         position: "absolute",
-        ...(isCenter ? {
-          top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-        } : step.position === "right" ? {
-          top: targetRect.top, left: targetRect.right + 20,
-        } : step.position === "bottom" ? {
-          top: targetRect.bottom + 16, left: targetRect.left,
-        } : step.position === "left" ? {
-          top: targetRect.top, right: window.innerWidth - targetRect.left + 20,
-        } : {}),
+        top: pos.top,
+        left: pos.left,
+        transform: pos.transform || "none",
         background: "#fff",
         borderRadius: 16,
         padding: "28px 32px",
@@ -272,6 +331,7 @@ function TutorialOverlay({ step, total, current, onNext, onSkip, targetRect }) {
         zIndex: 10002,
         boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
         animation: "fadeUp 0.35s ease-out",
+        transition: "top 0.3s ease, left 0.3s ease",
       }}>
         {/* X close button */}
         <button onClick={onSkip} style={{
