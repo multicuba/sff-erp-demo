@@ -95,7 +95,7 @@ const TUTORIAL_STEPS = [
     target: "dashboard-alerts",
     title: "Alertas Automatizadas",
     description: "El sistema le notifica automáticamente sobre productos con bajo stock, lotes próximos a caducar y órdenes que requieren atención. Usted define los umbrales.",
-    position: "left",
+    position: "bottom",
   },
   {
     target: "module-inventory",
