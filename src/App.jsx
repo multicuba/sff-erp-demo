@@ -26,7 +26,6 @@ const MODULES = [
   { id: "exports", label: "Exportación", icon: "🌎" },
   { id: "returns", label: "Devoluciones", icon: "🔄" },
   { id: "contacts", label: "Contactos", icon: "👥" },
-  { id: "mobile", label: "App Móvil", icon: "📱" },
 ];
 
 /* ─── DATA ─── */
@@ -112,14 +111,16 @@ const CONTACTS = [
 ];
 
 const TUTORIAL = [
-  { target:"welcome", title:"Bienvenido al ERP — Alcance v2", desc:"Este demo presenta el sistema integral con alcance ampliado: gestión de inventario multi-almacén, contenedores refrigerados itinerantes, consolidación de carga para terceros, documentos de exportación y app móvil con soporte offline.", pos:"center" },
-  { target:"sidebar", title:"10 Módulos Integrados", desc:"Compras, Inventario, Ventas, Facturación, Devoluciones y Contactos — más los 3 módulos nuevos: Contenedores, Consolidación y Exportación. Todo conectado en tiempo real con sincronización a QuickBooks.", pos:"right" },
-  { target:"kpis", title:"KPIs Operativos", desc:"Métricas clave del negocio: ventas, inventario valorizado en 5 almacenes (2 secos + 3 refrigerados), contenedores activos, y documentos de exportación pendientes.", pos:"bottom" },
-  { target:"alerts", title:"8 Tipos de Alertas", desc:"Alertas configurables: stock bajo mínimo, lotes próximos a caducar, contenedor sin movimiento, embarque próximo, BL por vencer, autorización pendiente, recepción incompleta y más.", pos:"bottom" },
-  { target:"mod-containers", title:"28 Contenedores Itinerantes", desc:"Gestión de contenedores refrigerados entre patio propio y yardas externas. Control de temperatura, historial de movimientos, y reasignación desde la app móvil con soporte offline.", pos:"right", nav:"containers" },
-  { target:"mod-consolidation", title:"Consolidación para Terceros", desc:"Inventario de consignación separado (valoración cero). Flujo end-to-end: orden, ingreso, consolidación, embarque y cierre. Documentos firmados con datos del tercero.", pos:"right", nav:"consolidation" },
-  { target:"mod-exports", title:"5 Documentos de Exportación", desc:"Packing List, Certificado de Origen, Certificado TLC, Reporte de Inspección y Guía de Transporte (BL/AWB). Formatos internacionales personalizados.", pos:"right", nav:"exports" },
-  { target:"done", title:"¡Explore el Sistema!", desc:"Haga clic en cualquier módulo, registro u orden para ver los detalles. Cada módulo tiene al menos dos niveles de profundidad. El sistema completo se implementará en 7 meses con dos entregas escalonadas.", pos:"center", nav:"dashboard" },
+  { target:"welcome", title:"Bienvenido al ERP — Revisión 2", desc:"Sistema integral diseñado por Minari Solutions para South Florida Foods Int'l Inc. Gestión centralizada de inventario multi-almacén, compras, ventas, facturación, contenedores refrigerados, consolidación de carga y documentos de exportación — todo integrado con QuickBooks.", pos:"center" },
+  { target:"sidebar", title:"9 Módulos Integrados", desc:"Cada módulo está conectado en tiempo real. Una venta reserva inventario, genera factura, y sincroniza con QuickBooks. Los módulos de Contenedores, Consolidación y Exportación cubren las tres líneas de negocio adicionales identificadas en el discovery.", pos:"right" },
+  { target:"kpis", title:"KPIs en Tiempo Real", desc:"Ventas del mes, inventario valorizado en 5 almacenes (2 secos + 3 refrigerados), contenedores activos de los 28 itinerantes, consolidaciones abiertas, documentos de exportación pendientes y cuentas por cobrar.", pos:"bottom" },
+  { target:"alerts", title:"Alertas Automatizadas", desc:"8 tipos configurables: stock bajo mínimo, lote próximo a caducar, contenedor sin movimiento, embarque próximo, BL por vencer, autorización pendiente, recepción incompleta y sincronización con QuickBooks. Usted define los umbrales.", pos:"bottom" },
+  { target:"mod-inventory", title:"Inventario Multi-Almacén", desc:"5 almacenes con posiciones físicas, control FIFO, trazabilidad por lotes con fechas de caducidad. Vista de productos o vista de almacenes con nivel de ocupación. Reabastecimiento automático por mínimos/máximos.", pos:"right", nav:"inventory" },
+  { target:"mod-containers", title:"28 Contenedores Itinerantes", desc:"Contenedores refrigerados modelados como ubicaciones especiales. Control de temperatura, yardas (propias y rentadas), historial de movimientos con timestamp y usuario, reasignación desde el sistema.", pos:"right", nav:"containers" },
+  { target:"mod-consolidation", title:"Consolidación para Terceros", desc:"Inventario de consignación separado del propio (valoración cero, no afecta ledger). Flujo end-to-end: orden de consolidación, ingreso de mercancía del tercero, consolidación, embarque y cierre. Documentos firmados.", pos:"right", nav:"consolidation" },
+  { target:"mod-exports", title:"5 Documentos de Exportación", desc:"Packing List, Certificado de Origen, Certificado TLC, Reporte de Inspección y Guía de Transporte (BL/AWB). Formatos internacionales con campos específicos por tipo. Asociados a contenedores y embarques.", pos:"right", nav:"exports" },
+  { target:"mod-sales", title:"Ventas y Exportación", desc:"Listas de precios por categoría de cliente y volumen. Descuentos con workflow de aprobación. Ventas de exportación con cálculo de vencimiento desde la fecha del Bill of Lading. Cotizaciones automáticas por email.", pos:"right", nav:"sales" },
+  { target:"done", title:"¡Explore el Sistema!", desc:"Haga clic en cualquier módulo, registro u orden para navegar a detalle. El proyecto se implementa en 7 meses con dos entregas: Go-Live de Odoo en el Mes 4 y Go-Live de la aplicación móvil en el Mes 7.", pos:"center", nav:"dashboard" },
 ];
 
 /* ─── SHARED COMPONENTS ─── */
@@ -479,49 +480,6 @@ function ContactsView() {
   </div>;
 }
 
-function MobileView() {
-  const mob = useM();
-  const screens = [
-    { name:"Consulta de SKU", icon:"🔍", desc:"Escanee código de barras con Zebra para ver producto, stock, lote, ubicación y caducidad." },
-    { name:"Recepción de Compras", icon:"📥", desc:"Escanee PO y productos al recibir. Validación automática contra orden. Multi-almacén." },
-    { name:"Picking y Packing", icon:"📤", desc:"Ruta optimizada de picking. Impresión Bluetooth de etiquetas desde Zebra." },
-    { name:"Toma Física", icon:"📋", desc:"Conteo cíclico o completo por almacén/zona. Ajustes automáticos al cerrar." },
-    { name:"Transferencias", icon:"🔄", desc:"Mueva inventario entre los 5 almacenes. Escaneo origen y destino." },
-    { name:"Devoluciones", icon:"↩️", desc:"Registre devolución con motivo y destino. Requiere autorización según reglas." },
-    { name:"Contenedores", icon:"🏗️", desc:"Escanee contenedor, consulte yarda y contenido, reasigne yarda. Funciona offline." },
-    { name:"Consolidación", icon:"🚢", desc:"Ingreso de mercancía de terceros. Visualmente diferenciado del inventario propio." },
-    { name:"Alertas", icon:"⚠️", desc:"Notificaciones push: stock bajo, lote por caducar, autorización pendiente, embarque próximo." },
-  ];
-  return <div>
-    <Hdr title="Aplicación Móvil" sub="Dispositivos Zebra · Escaneo de barras · Impresión Bluetooth · Modo Offline" />
-    <Card style={{ marginBottom:20, background:"linear-gradient(135deg, #0F2B3C, #1B5E7B)", border:"none" }}>
-      <div style={{ color:"#fff", display:"flex", alignItems:mob?"flex-start":"center", gap:20, flexDirection:mob?"column":"row" }}>
-        <div style={{ fontSize:48 }}>📱</div>
-        <div><h3 style={{ fontSize:18, fontWeight:700, marginBottom:6 }}>App Nativa para Operaciones de Almacén</h3>
-          <p style={{ fontSize:13, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Aplicación Android optimizada para dispositivos Zebra con escaneo de códigos de barras e impresión Bluetooth de etiquetas. Soporte completo de operación sin conexión para yardas externas y zonas con conectividad limitada. Sincronización automática al recuperar señal.</p>
-        </div>
-      </div>
-    </Card>
-    <div style={{ display:"grid", gridTemplateColumns:mob?"1fr":"1fr 1fr 1fr", gap:12 }}>
-      {screens.map(s => <Card key={s.name}>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-          <span style={{ fontSize:24 }}>{s.icon}</span><span style={{ fontSize:14, fontWeight:700, color:C.t1 }}>{s.name}</span>
-        </div>
-        <p style={{ fontSize:12, color:C.t2, lineHeight:1.5 }}>{s.desc}</p>
-      </Card>)}
-    </div>
-    <Card style={{ marginTop:16 }}>
-      <h4 style={{ fontSize:14, fontWeight:700, color:C.t1, marginBottom:12 }}>Cronograma de Entrega</h4>
-      <div style={{ display:"flex", gap:0, flexWrap:"wrap" }}>
-        {["Mes 1: Preparación","Mes 2: Desarrollo Base","Mes 3: Contenedores + Consolidación","Mes 4: ✅ GO-LIVE ODOO","Mes 5: App — Core","Mes 6: App — Avanzado","Mes 7: ✅ GO-LIVE MÓVIL"].map((m,i) => 
-          <div key={i} style={{ flex:"1 1 120px", padding:"10px 12px", background:m.includes("✅")?"#D1FAE5":i<=3?"#DBEAFE":"#EDE9FE", borderRadius:8, margin:4, textAlign:"center" }}>
-            <div style={{ fontSize:11, fontWeight:700, color:m.includes("✅")?"#059669":i<=3?"#1D4ED8":"#5B21B6" }}>{m}</div>
-          </div>)}
-      </div>
-    </Card>
-  </div>;
-}
-
 function ProfileView() {
   const mob = useM();
   const perms = [{m:"Inventario",l:"Lectura / Escritura",i:"📦"},{m:"Compras",l:"Lectura / Escritura / Aprobación",i:"🛒"},{m:"Ventas",l:"Lectura / Escritura",i:"💰"},{m:"Facturación",l:"Lectura / Escritura",i:"🧾"},{m:"Contenedores",l:"Lectura / Escritura",i:"🏗️"},{m:"Consolidación",l:"Lectura / Escritura",i:"🚢"},{m:"Exportación",l:"Lectura / Escritura",i:"🌎"},{m:"Devoluciones",l:"Lectura / Escritura / Aprobación",i:"🔄"}];
@@ -605,7 +563,6 @@ export default function App() {
       case "exports": return <ExportsView key={rk} />;
       case "returns": return <ReturnsView key={rk} />;
       case "contacts": return <ContactsView key={rk} />;
-      case "mobile": return <MobileView key={rk} />;
       case "profile": return <ProfileView key={rk} />;
       default: return <DashboardView key={rk} onNav={nav} />;
     }
